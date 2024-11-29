@@ -1,13 +1,25 @@
 from __future__ import absolute_import
+import logging
+
 
 # check the "overlap" of interchromosomaltranslocations
 
+logging.basicConfig(level=logging.DEBUG)
+LOG = logging.getLogger(__name__)
 
 def precise_overlap(chrApos_query, chrBpos_query, chrApos_db, chrBpos_db, distance):
+    LOG.debug("chrApos_query=%s",chrApos_query)
+    LOG.debug("chrBpos_query=%s",chrApos_db)
+    LOG.debug("chrApos_db=%s",chrApos_db)
+    LOG.debug("chrBpos_db=%s", chrBpos_db)
     Adist = abs(chrApos_query - chrApos_db)
     Bdist = abs(chrBpos_query - chrBpos_db)
+    LOG.debug("Adist: %s", Adist)
+    LOG.debug("Bdist: %s", Adist)
     if max([Adist, Bdist]) <= distance:
+        LOG.debug("Returning: %s", max([Adist, Bdist]))
         return max([Adist, Bdist]), True
+    LOG.debug("Outside of distance")
     return False, False
 
 # check if intrachromosomal vaiants overlap

@@ -1,10 +1,13 @@
 from __future__ import absolute_import
 
+import logging
 import gzip
 import sys
 
 import numpy as np
 
+logging.basicConfig(level=logging.DEBUG)
+LOG = logging.getLogger(__name__)
 from . import database, overlap_module, readVCF
 
 
@@ -191,6 +194,7 @@ def queryVCFDB(DBvariants, query_variant, args, use_OCC_tag):
     frequency = []
     occ = []
     similarity = []
+    LOG.debug("chrA=%s",chrA) # seems to be an actual chromosome
     if chrA not in DBvariants:
         if use_OCC_tag:
             return([0, 0])
@@ -224,15 +228,22 @@ def queryVCFDB(DBvariants, query_variant, args, use_OCC_tag):
                 hit_tmp, match = overlap_module.precise_overlap(
                     chrApos, chrBpos, event[0], event[1], args.bnd_distance)
             elif "INS" in variation_type:
+                LOG.debug("query_variant=%s", query_variant)
                 #insertions are treated as single points, overlap is not defined, and the maximum distance is determined by ins_distance
+                # LOG.debug("event_0=",event[0])
+                # LOG.debug("event_1=",event[1])
                 hit_tmp, match = overlap_module.precise_overlap(
                     chrApos, chrBpos, event[0], event[1], args.ins_distance)
+                LOG.debug("hit_tmp=%s", hit_tmp)
             else:
                 hit_tmp, match = overlap_module.isSameVariation(
                     chrApos, chrBpos, event[0], event[1], args.overlap, args.bnd_distance)
 
             if match:
+                LOG.debug("similarity before append: %s", similarity)
+                LOG.debug("appending hit_tmp=%s",hit_tmp)
                 similarity.append(hit_tmp)
+                LOG.debug("similarity after append: %s", similarity)
                 if use_OCC_tag:
                     occ.append(sample_list[0])
                     frequency.append(sample_list[1])
@@ -243,11 +254,15 @@ def queryVCFDB(DBvariants, query_variant, args, use_OCC_tag):
                             samples = samples | set([i])
     if use_OCC_tag:
         if occ:
+            LOG.debug("occ=%s",occ)
+            LOG.debug("similarity=%s", similarity)
             if not (chrA == chrB):
                 idx = similarity.index(min(similarity))
             else:
                 idx = similarity.index(max(similarity))
+                LOG.debug("similarity[%s]=%s", idx, similarity[idx])
             hits = [occ[idx], frequency[idx]]
+            LOG.debug("from occ=%s and freq=%s, select occ[%s]=%s, frequency[%s]=%s", occ, frequency,idx, occ[idx], idx,frequency[idx])
         else:
             hits = [0, 0]
     else:
